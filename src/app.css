@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+h1 {
+  font-family: "Bungee Tint", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+@layer components {
+  h2 {
+    font-family: "Lilita One", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+
+    @apply text-3xl font-bold text-gray-800 mb-6 self-center;
+  }
+}
