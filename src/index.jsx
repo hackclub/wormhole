@@ -66,7 +66,12 @@ function App() {
     try {
       // Test backend connection first
       console.log("Testing backend connection...");
-      const testResponse = await fetch("http://localhost:3001/api/test");
+      const apiUrl =
+        window.location.hostname === "localhost"
+          ? "http://localhost:3001"
+          : window.location.origin;
+
+      const testResponse = await fetch(`${apiUrl}/api/test`);
       if (!testResponse.ok) {
         throw new Error("Backend server is not responding");
       }
@@ -123,7 +128,12 @@ function App() {
           console.log("Sending auth request to backend...");
           console.log("Request body:", JSON.stringify({ code }, null, 2));
 
-          const response = await fetch("http://localhost:3001/api/slack/auth", {
+          const apiUrl =
+            window.location.hostname === "localhost"
+              ? "http://localhost:3001"
+              : window.location.origin;
+
+          const response = await fetch(`${apiUrl}/api/slack/auth`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -423,7 +433,12 @@ function App() {
 
       console.log("Sending to server...");
       // Send to server
-      const uploadResponse = await fetch("http://localhost:3001/api/publish", {
+      const apiUrl =
+        window.location.hostname === "localhost"
+          ? "http://localhost:3001"
+          : window.location.origin;
+
+      const uploadResponse = await fetch(`${apiUrl}/api/publish`, {
         method: "POST",
         body: formData,
       });

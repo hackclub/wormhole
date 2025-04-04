@@ -4,7 +4,7 @@ import fs from "fs";
 import path from "path";
 import tailwindcss from "@tailwindcss/vite";
 
-export default defineConfig(({ command }) => ({
+export default defineConfig(({ command, mode }) => ({
   plugins: [react(), tailwindcss()],
   server:
     command === "serve"
@@ -16,10 +16,15 @@ export default defineConfig(({ command }) => ({
           port: 5173,
           proxy: {
             "/api": {
-              target: "http://localhost:3000",
+              target: "http://localhost:3001",
               changeOrigin: true,
             },
           },
         }
       : undefined,
+  build: {
+    outDir: "dist",
+    assetsDir: "assets",
+    sourcemap: mode === "development",
+  },
 }));

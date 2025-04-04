@@ -231,4 +231,25 @@ if (process.env.NODE_ENV === "production") {
 const port = process.env.PORT || 3001;
 expressApp.listen(port, () => {
   console.log(`Server running on port ${port}`);
+  console.log(`Environment: ${process.env.NODE_ENV}`);
+  console.log(`Frontend URL: ${process.env.FRONTEND_URL || "Not set"}`);
+  console.log(`CORS origins: ${JSON.stringify(expressApp.get("cors").origin)}`);
+
+  // Log if we're in production mode and serving static files
+  if (process.env.NODE_ENV === "production") {
+    console.log(`Serving static files from: ${path.join(__dirname, "dist")}`);
+    console.log(
+      `Index HTML path: ${path.join(__dirname, "dist", "index.html")}`
+    );
+
+    // Check if the dist directory exists
+    if (fs.existsSync(path.join(__dirname, "dist"))) {
+      console.log("dist directory exists");
+      // List files in the dist directory
+      const files = fs.readdirSync(path.join(__dirname, "dist"));
+      console.log(`Files in dist directory: ${JSON.stringify(files)}`);
+    } else {
+      console.error("dist directory does not exist!");
+    }
+  }
 });
