@@ -474,7 +474,9 @@ function App() {
         <div className="w-full max-w-4xl p-8 bg-white rounded-lg shadow-md">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-4xl font-bold text-gray-800">
-              Behold the Wormhole Expanse
+              DIG THE HOLE
+              <br />
+              FEED THE WORM
             </h1>
             <div className="flex flex-col items-end gap-1">
               <div className="flex items-center gap-2">
@@ -493,13 +495,6 @@ function App() {
               </button>
             </div>
           </div>
-
-          <p className="italic text-gray-400 text-center mb-8">
-            Munch upon the dirt of the cosmos to journey through space and time!
-            <br />
-            <br />
-            YOU ARE A WORM, THE TIME TO DIG IS NOW
-          </p>
 
           <RecordingInterface
             videoRef={videoRef}

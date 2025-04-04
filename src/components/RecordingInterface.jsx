@@ -16,7 +16,6 @@ function RecordingInterface({
 }) {
   return (
     <div className="flex flex-col">
-      <h2 className="self-center">Dig Your Own Hole</h2>
       <div className="mb-8 rounded-lg overflow-hidden shadow">
         <video
           ref={videoRef}
@@ -44,20 +43,20 @@ function RecordingInterface({
           disabled={isRecording}
           className="px-4 py-2 rounded bg-[#4A154B] text-white hover:bg-[#611f64] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
-          Start Digging
+          COMMENCE DIGGING
         </button>
         <button
           onClick={stopRecording}
           disabled={!isRecording}
           className="px-4 py-2 rounded bg-[#4A154B] text-white hover:bg-[#611f64] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
-          Stop Digging
+          CEASE TO DIG
         </button>
       </div>
 
       {frames.length > 0 && (
         <div className="mb-8">
-          <h2 className="mb-4 text-gray-800">Frames</h2>
+          <h2 className="mb-4 text-gray-800">MOMENTS IN TIME</h2>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-2.5">
             {frames.map((frame, index) => (
               <img
@@ -73,7 +72,7 @@ function RecordingInterface({
 
       {timelapseVideo && (
         <div className="mt-8">
-          <h2 className="mb-4 text-gray-800">Timelapse Preview</h2>
+          <h2 className="mb-4 text-gray-800">GAZE INTO YOUR PAST</h2>
           <video
             src={timelapseVideo}
             controls
@@ -84,7 +83,7 @@ function RecordingInterface({
             disabled={isPublishing}
             className="mt-4 px-4 py-2 rounded bg-[#4A154B] text-white hover:bg-[#611f64] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
-            {isPublishing ? "Publishing..." : "Publish to Slack"}
+            {isPublishing ? "here we go..." : "BLOW OUR MINDS"}
           </button>
         </div>
       )}
