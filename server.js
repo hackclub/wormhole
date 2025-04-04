@@ -233,7 +233,14 @@ expressApp.listen(port, () => {
   console.log(`Server running on port ${port}`);
   console.log(`Environment: ${process.env.NODE_ENV}`);
   console.log(`Frontend URL: ${process.env.FRONTEND_URL || "Not set"}`);
-  console.log(`CORS origins: ${JSON.stringify(expressApp.get("cors").origin)}`);
+
+  // Log CORS origins directly instead of trying to access them through expressApp.get('cors')
+  const corsOrigins = [
+    "http://localhost:5173",
+    "https://localhost:5173",
+    process.env.FRONTEND_URL || "https://your-coolify-domain.com",
+  ];
+  console.log(`CORS origins: ${JSON.stringify(corsOrigins)}`);
 
   // Log if we're in production mode and serving static files
   if (process.env.NODE_ENV === "production") {
