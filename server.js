@@ -37,7 +37,11 @@ const upload = multer({ storage: storage });
 // Configure CORS
 expressApp.use(
   cors({
-    origin: ["http://localhost:5173", "https://localhost:5173"],
+    origin: [
+      "http://localhost:5173",
+      "https://localhost:5173",
+      process.env.FRONTEND_URL || "https://your-coolify-domain.com",
+    ],
     credentials: true,
   })
 );
@@ -68,7 +72,7 @@ expressApp.post("/api/slack/auth", async (req, res) => {
       code,
       redirect_uri:
         process.env.NODE_ENV === "production"
-          ? "https://your-coolify-domain.com" // Replace with your actual domain
+          ? process.env.FRONTEND_URL || "https://your-coolify-domain.com"
           : "https://localhost:5173",
     });
 
@@ -210,6 +214,18 @@ expressApp.get("/api/test-slack-token", async (req, res) => {
     });
   }
 });
+
+// Serve static files from the React app in production
+if (process.env.NODE_ENV === "production") {
+  // Serve static files from the React app
+  expressApp.use(express.static(path.join(__dirname, "dist")));
+
+  // The "catchall" handler: for any request that doesn't
+  // match one above, send back React's index.html file.
+  expressApp.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "dist", "index.html"));
+  });
+}
 
 // Start the Express server
 const port = process.env.PORT || 3001;
