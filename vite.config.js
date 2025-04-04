@@ -27,4 +27,10 @@ export default defineConfig(({ command, mode }) => ({
     assetsDir: "assets",
     sourcemap: mode === "development",
   },
+  // Define environment variables that should be exposed to the client
+  define: {
+    "process.env.VITE_SLACK_CLIENT_ID": JSON.stringify(
+      process.env.VITE_SLACK_CLIENT_ID
+    ),
+  },
 }));

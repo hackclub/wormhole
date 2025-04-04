@@ -21,6 +21,9 @@ Make sure to set the following environment variables in your Coolify deployment:
 - `SLACK_APP_TOKEN`: Your Slack app token (starts with `xapp-`)
 - `SLACK_CHANNEL_ID`: The ID of the Slack channel where files will be uploaded
 - `FRONTEND_URL`: The URL of your deployed application (e.g., `https://your-app.coolify.app`)
+- `VITE_SLACK_CLIENT_ID`: Your Slack app client ID (must match `SLACK_CLIENT_ID`)
+
+> **Important**: The `VITE_SLACK_CLIENT_ID` environment variable is crucial for the frontend to authenticate with Slack. Make sure it's set correctly in Coolify and matches your `SLACK_CLIENT_ID`.
 
 ## Deployment Steps
 
@@ -42,6 +45,7 @@ Make sure to set the following environment variables in your Coolify deployment:
 
    - Add all the environment variables listed above
    - Make sure to set `NODE_ENV` to `production`
+   - Double-check that `VITE_SLACK_CLIENT_ID` is set correctly
 
 4. **Deploy**:
 
@@ -120,6 +124,33 @@ If you encounter a "Bad Gateway" error:
    - If your application is using too much memory, it might be terminated
    - Check the memory usage in Coolify
    - Consider increasing the memory limit if necessary
+
+### "Invalid client_id parameter" Error
+
+If you encounter an "Invalid client_id parameter" error when trying to log in with Slack:
+
+1. **Check the VITE_SLACK_CLIENT_ID environment variable**:
+
+   - Make sure `VITE_SLACK_CLIENT_ID` is set correctly in Coolify
+   - It should match your `SLACK_CLIENT_ID` value
+   - The value should be your Slack app's client ID (e.g., `1234567890.1234567890`)
+
+2. **Rebuild the application**:
+
+   - After setting the environment variable, rebuild the application
+   - In Coolify, go to your application and click "Rebuild"
+
+3. **Check the browser console**:
+
+   - Open your browser's developer tools (F12)
+   - Go to the Console tab
+   - Look for any errors related to the Slack client ID
+
+4. **Verify the Slack app configuration**:
+
+   - Make sure your Slack app is properly configured
+   - Check that the OAuth & Permissions settings are correct
+   - Verify that the redirect URI matches your application's URL
 
 ## Additional Notes
 

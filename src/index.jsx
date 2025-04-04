@@ -77,7 +77,19 @@ function App() {
       }
       console.log("Backend connection successful");
 
-      const SLACK_CLIENT_ID = import.meta.env.VITE_SLACK_CLIENT_ID;
+      // Get the Slack client ID from environment variables or use a fallback
+      const SLACK_CLIENT_ID =
+        import.meta.env.VITE_SLACK_CLIENT_ID ||
+        process.env.VITE_SLACK_CLIENT_ID;
+
+      if (!SLACK_CLIENT_ID) {
+        throw new Error(
+          "Slack client ID is not configured. Please check your environment variables."
+        );
+      }
+
+      console.log("Using Slack client ID:", SLACK_CLIENT_ID);
+
       const REDIRECT_URI = window.location.origin;
       const scope = "users:read users:read.email chat:write files:write";
 
