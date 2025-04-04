@@ -63,17 +63,25 @@ expressApp.get("/api/test", (req, res) => {
 
 // Slack OAuth endpoint
 expressApp.post("/api/slack/auth", async (req, res) => {
-  const { code } = req.body;
+  const { code, redirectUri } = req.body;
 
   try {
+    // Use the redirect URI from the request body or fall back to headers
+    const finalRedirectUri =
+      redirectUri ||
+      (req.headers.origin
+        ? new URL(req.headers.origin).origin
+        : process.env.NODE_ENV === "production"
+        ? process.env.FRONTEND_URL || "https://wormhole.hackclub.com"
+        : "https://localhost:5173");
+
+    console.log("Using redirect URI:", finalRedirectUri);
+
     const response = await app.client.oauth.v2.access({
       client_id: process.env.SLACK_CLIENT_ID,
       client_secret: process.env.SLACK_CLIENT_SECRET,
       code,
-      redirect_uri:
-        process.env.NODE_ENV === "production"
-          ? process.env.FRONTEND_URL || "https://your-coolify-domain.com"
-          : "https://localhost:5173",
+      redirect_uri: finalRedirectUri,
     });
 
     if (!response.ok) {

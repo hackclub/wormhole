@@ -138,7 +138,12 @@ function App() {
       if (code) {
         try {
           console.log("Sending auth request to backend...");
-          console.log("Request body:", JSON.stringify({ code }, null, 2));
+          const redirectUri = window.location.origin;
+          console.log("Using redirect URI:", redirectUri);
+          console.log(
+            "Request body:",
+            JSON.stringify({ code, redirectUri }, null, 2)
+          );
 
           const apiUrl =
             window.location.hostname === "localhost"
@@ -150,7 +155,7 @@ function App() {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ code }),
+            body: JSON.stringify({ code, redirectUri }),
           });
 
           console.log("Response status:", response.status);
