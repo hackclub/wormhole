@@ -1,9 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import "./app.css";
-import { generateFunnyTitle } from "./utils/titleGenerator";
-import RecordingsList from "./components/RecordingsList";
-import PublicRecordingsCarousel from "./components/PublicRecordingsCarousel";
 import RecordingInterface from "./components/RecordingInterface";
 import LoginScreen from "./components/LoginScreen";
 
@@ -18,10 +15,9 @@ function App() {
   const isRecordingRef = useRef(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [timelapseVideo, setTimelapseVideo] = useState(null);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [recordings, setRecordings] = useState([]);
-  const [publicRecordings, setPublicRecordings] = useState([]);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -44,7 +40,6 @@ function App() {
 
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          // Set video ready state immediately after setting srcObject
           setIsVideoReady(true);
         }
       } catch (err) {
@@ -71,7 +66,7 @@ function App() {
     try {
       // Test backend connection first
       console.log("Testing backend connection...");
-      const testResponse = await fetch("https://localhost:3001/api/test");
+      const testResponse = await fetch("http://localhost:3001/api/test");
       if (!testResponse.ok) {
         throw new Error("Backend server is not responding");
       }
@@ -79,7 +74,7 @@ function App() {
 
       const SLACK_CLIENT_ID = import.meta.env.VITE_SLACK_CLIENT_ID;
       const REDIRECT_URI = window.location.origin;
-      const scope = "users:read users:read.email";
+      const scope = "users:read users:read.email chat:write files:write";
 
       const slackAuthUrl = `https://slack.com/oauth/v2/authorize?client_id=${SLACK_CLIENT_ID}&scope=${scope}&redirect_uri=${REDIRECT_URI}`;
 
@@ -128,16 +123,13 @@ function App() {
           console.log("Sending auth request to backend...");
           console.log("Request body:", JSON.stringify({ code }, null, 2));
 
-          const response = await fetch(
-            "https://localhost:3001/api/slack/auth",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ code }),
-            }
-          );
+          const response = await fetch("http://localhost:3001/api/slack/auth", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ code }),
+          });
 
           console.log("Response status:", response.status);
           console.log(
@@ -150,7 +142,6 @@ function App() {
           );
 
           const data = await response.json();
-          console.log("Backend response:", data);
 
           if (!response.ok) {
             throw new Error(
@@ -394,37 +385,7 @@ function App() {
         throw new Error("Failed to create video blob");
       }
 
-      // Upload the recording if user is logged in
-      if (user) {
-        const formData = new FormData();
-        formData.append("recording", videoBlob, "timelapse.webm");
-        formData.append("userId", user.email);
-        formData.append("title", generateFunnyTitle());
-
-        console.log("Uploading recording...");
-        const response = await fetch(
-          "https://localhost:3001/api/recordings/upload",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(
-            errorData.error || `Upload failed with status: ${response.status}`
-          );
-        }
-
-        const result = await response.json();
-        console.log("Recording uploaded successfully:", result);
-
-        // Update recordings list with the new recording
-        setRecordings((prev) => [result.recording, ...prev]);
-      }
-
-      // Clear frames after successful upload
+      // Clear frames after successful video creation
       setFrames([]);
     } catch (error) {
       console.error("Error processing recording:", error);
@@ -434,163 +395,72 @@ function App() {
     }
   };
 
-  const downloadTimelapse = () => {
-    // Create links for each frame
-    frames.forEach((frame, index) => {
-      const link = document.createElement("a");
-      link.href = frame;
-      link.download = `timelapse-frame-${index}.jpg`;
-      link.click();
-    });
-  };
+  const publishToSlack = async () => {
+    if (!timelapseVideo) {
+      alert("No video to publish");
+      return;
+    }
 
-  // Add this effect to fetch recordings when user logs in
-  useEffect(() => {
-    const fetchRecordings = async () => {
-      if (user) {
-        try {
-          const response = await fetch(
-            `https://localhost:3001/api/recordings/${user.email}`
-          );
-          if (!response.ok) {
-            throw new Error("Failed to fetch recordings");
-          }
-          const data = await response.json();
-          // Ensure isPublic is a boolean for each recording
-          const processedRecordings = data.map((recording) => ({
-            ...recording,
-            isPublic: Boolean(recording.isPublic),
-          }));
-          setRecordings(processedRecordings);
-        } catch (error) {
-          console.error("Error fetching recordings:", error);
-        }
-      }
-    };
+    if (!user) {
+      alert("Please log in with Slack to publish");
+      return;
+    }
 
-    fetchRecordings();
-  }, [user]);
+    setIsPublishing(true);
+    try {
+      console.log("Converting video to blob...");
+      // Convert the video URL to a blob
+      const response = await fetch(timelapseVideo);
+      const videoBlob = await response.blob();
+      console.log("Video blob created, size:", videoBlob.size);
 
-  // Add this effect to fetch public recordings
-  useEffect(() => {
-    const fetchPublicRecordings = async () => {
+      // Create form data
+      const formData = new FormData();
+      formData.append("recording", videoBlob, "timelapse.webm");
+      formData.append("title", "New Timelapse");
+      formData.append("userName", user.name);
+      formData.append("userId", user.id);
+
+      console.log("Sending to server...");
+      // Send to server
+      const uploadResponse = await fetch("http://localhost:3001/api/publish", {
+        method: "POST",
+        body: formData,
+      });
+
+      console.log("Server response status:", uploadResponse.status);
+      const responseText = await uploadResponse.text();
+      console.log("Server response text:", responseText);
+
+      let errorData;
       try {
-        const response = await fetch(
-          "https://localhost:3001/api/recordings/public"
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch public recordings");
-        }
-        const data = await response.json();
-        setPublicRecordings(data);
-      } catch (error) {
-        console.error("Error fetching public recordings:", error);
-      }
-    };
-
-    fetchPublicRecordings();
-  }, []);
-
-  const handleDeleteRecording = async (recordingId) => {
-    if (!user) return;
-
-    // Show confirmation dialog
-    const isConfirmed = window.confirm(
-      "Are you sure you want to delete this recording? This action cannot be undone."
-    );
-    if (!isConfirmed) {
-      return; // If user cancels, don't proceed with deletion
-    }
-
-    try {
-      const response = await fetch(
-        `https://localhost:3001/api/recordings/${user.email}/${recordingId}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to delete recording");
+        errorData = JSON.parse(responseText);
+      } catch (e) {
+        console.error("Failed to parse response as JSON:", e);
+        console.error("Raw response:", responseText);
+        throw new Error(`Server returned invalid JSON: ${responseText}`);
       }
 
-      // Update the recordings list by removing the deleted recording
-      setRecordings((prev) => prev.filter((r) => r._id !== recordingId));
+      if (!uploadResponse.ok) {
+        const errorMessage =
+          errorData.error ||
+          `Upload failed with status: ${uploadResponse.status}`;
+        const errorDetails = errorData.details
+          ? `\nDetails: ${errorData.details}`
+          : "";
+        const slackError = errorData.slackError
+          ? `\nSlack Error: ${JSON.stringify(errorData.slackError)}`
+          : "";
+        throw new Error(`${errorMessage}${errorDetails}${slackError}`);
+      }
+
+      alert("Successfully published to Slack!");
+      setTimelapseVideo(null); // Clear the video after successful publish
     } catch (error) {
-      console.error("Error deleting recording:", error);
-      alert("Failed to delete recording");
-    }
-  };
-
-  const handleTogglePublic = async (recordingId, isPublic) => {
-    if (!user) return;
-
-    try {
-      const response = await fetch(
-        `https://localhost:3001/api/recordings/${user.email}/${recordingId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ isPublic }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to update recording visibility");
-      }
-
-      const data = await response.json();
-
-      // Update the recordings list with the new public status
-      setRecordings((prev) =>
-        prev.map((r) => {
-          if (r._id === recordingId) {
-            return { ...r, isPublic: Boolean(isPublic) };
-          }
-          return r;
-        })
-      );
-    } catch (error) {
-      console.error("Error updating recording visibility:", error);
-      alert("Failed to update recording visibility");
-    }
-  };
-
-  const handleUpdateTitle = async (recordingId, newTitle) => {
-    if (!user) return;
-
-    try {
-      const response = await fetch(
-        `https://localhost:3001/api/recordings/${user.email}/${recordingId}/title`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ title: newTitle }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to update recording title");
-      }
-
-      const data = await response.json();
-
-      // Update the recordings list with the new title
-      setRecordings((prev) =>
-        prev.map((r) => {
-          if (r._id === recordingId) {
-            return { ...r, title: newTitle };
-          }
-          return r;
-        })
-      );
-    } catch (error) {
-      console.error("Error updating recording title:", error);
-      alert("Failed to update recording title");
+      console.error("Error publishing to Slack:", error);
+      alert(`Failed to publish to Slack: ${error.message}`);
+    } finally {
+      setIsPublishing(false);
     }
   };
 
@@ -624,16 +494,12 @@ function App() {
             </div>
           </div>
 
-          <p className="italic text-gray-400 mx-8 mb-8">
-            Munch upon the dirt of the cosmos to journey through space and time
-            to experience the worlds of other worms and broadcast your own
-            tunnels! Tunnels of life!! The life of a worm!!!
+          <p className="italic text-gray-400 text-center mb-8">
+            Munch upon the dirt of the cosmos to journey through space and time!
             <br />
             <br />
             YOU ARE A WORM, THE TIME TO DIG IS NOW
           </p>
-
-          <PublicRecordingsCarousel recordings={publicRecordings} />
 
           <RecordingInterface
             videoRef={videoRef}
@@ -645,17 +511,10 @@ function App() {
             frames={frames}
             timelapseVideo={timelapseVideo}
             handleVideoLoaded={handleVideoLoaded}
+            isProcessing={isProcessing}
+            isPublishing={isPublishing}
+            publishToSlack={publishToSlack}
           />
-
-          {/* Add Recordings section */}
-          <div className="mt-12">
-            <RecordingsList
-              recordings={recordings}
-              onDeleteRecording={handleDeleteRecording}
-              onTogglePublic={handleTogglePublic}
-              onUpdateTitle={handleUpdateTitle}
-            />
-          </div>
         </div>
       ) : (
         <LoginScreen handleSlackLogin={handleSlackLogin} />

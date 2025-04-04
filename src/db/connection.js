@@ -3,8 +3,16 @@ import mongoose from "mongoose";
 const connectDB = async () => {
   try {
     console.log("Attempting to connect to MongoDB...");
-    const uri = process.env.MONGODB_URI || "mongodb://localhost:27017/wormhole";
-    console.log("Using MongoDB URI:", uri);
+    const uri = process.env.MONGODB_URI;
+
+    if (!uri) {
+      throw new Error("MONGODB_URI environment variable is not set");
+    }
+
+    console.log(
+      "Using MongoDB URI:",
+      uri.replace(/\/\/[^:]+:[^@]+@/, "//****:****@")
+    ); // Hide credentials in logs
 
     const conn = await mongoose.connect(uri, {
       serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
@@ -24,7 +32,8 @@ const connectDB = async () => {
       message: error.message,
       code: error.code,
     });
-    process.exit(1);
+    // Don't exit the process, let the application handle the error
+    throw error;
   }
 };
 

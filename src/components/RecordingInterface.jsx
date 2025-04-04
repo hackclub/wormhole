@@ -10,6 +10,9 @@ function RecordingInterface({
   frames,
   timelapseVideo,
   handleVideoLoaded,
+  isProcessing,
+  isPublishing,
+  publishToSlack,
 }) {
   return (
     <div className="flex flex-col">
@@ -76,6 +79,13 @@ function RecordingInterface({
             controls
             className="w-full rounded-lg shadow"
           />
+          <button
+            onClick={publishToSlack}
+            disabled={isPublishing}
+            className="mt-4 px-4 py-2 rounded bg-[#4A154B] text-white hover:bg-[#611f64] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            {isPublishing ? "Publishing..." : "Publish to Slack"}
+          </button>
         </div>
       )}
     </div>
