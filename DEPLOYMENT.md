@@ -25,6 +25,28 @@ Make sure to set the following environment variables in your Coolify deployment:
 
 > **Important**: The `VITE_SLACK_CLIENT_ID` environment variable is crucial for the frontend to authenticate with Slack. Make sure it's set correctly in Coolify and matches your `SLACK_CLIENT_ID`.
 
+## Slack App Configuration
+
+Before deploying, make sure your Slack app is properly configured:
+
+1. **Set the Redirect URLs**:
+
+   - Go to https://api.slack.com/apps
+   - Select your app
+   - In the left sidebar, click on "OAuth & Permissions"
+   - Scroll down to the "Redirect URLs" section
+   - Click "Add New Redirect URL"
+   - Add your production URL: `https://your-app.coolify.app` (replace with your actual domain)
+   - Click "Add"
+   - Click "Save Changes" at the bottom of the page
+
+2. **Verify OAuth Scopes**:
+   - Make sure your app has the following scopes:
+     - `users:read`
+     - `users:read.email`
+     - `chat:write`
+     - `files:write`
+
 ## Deployment Steps
 
 1. **Connect your repository to Coolify**:
@@ -46,6 +68,7 @@ Make sure to set the following environment variables in your Coolify deployment:
    - Add all the environment variables listed above
    - Make sure to set `NODE_ENV` to `production`
    - Double-check that `VITE_SLACK_CLIENT_ID` is set correctly
+   - Make sure `FRONTEND_URL` is set to your actual domain (e.g., `https://your-app.coolify.app`)
 
 4. **Deploy**:
 
@@ -151,6 +174,35 @@ If you encounter an "Invalid client_id parameter" error when trying to log in wi
    - Make sure your Slack app is properly configured
    - Check that the OAuth & Permissions settings are correct
    - Verify that the redirect URI matches your application's URL
+
+### "bad_redirect_uri" Error
+
+If you encounter a "bad_redirect_uri" error when trying to log in with Slack:
+
+1. **Check the Redirect URLs in your Slack app settings**:
+
+   - Go to https://api.slack.com/apps
+   - Select your app
+   - In the left sidebar, click on "OAuth & Permissions"
+   - Scroll down to the "Redirect URLs" section
+   - Make sure your production URL is listed (e.g., `https://your-app.coolify.app`)
+   - If not, add it and click "Save Changes"
+
+2. **Verify the FRONTEND_URL environment variable**:
+
+   - Make sure `FRONTEND_URL` is set correctly in Coolify
+   - It should match your actual domain (e.g., `https://your-app.coolify.app`)
+
+3. **Check the browser console**:
+
+   - Open your browser's developer tools (F12)
+   - Go to the Console tab
+   - Look for any errors related to the redirect URI
+
+4. **Rebuild the application**:
+
+   - After making changes, rebuild the application
+   - In Coolify, go to your application and click "Rebuild"
 
 ## Additional Notes
 
