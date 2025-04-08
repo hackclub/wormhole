@@ -150,7 +150,12 @@ expressApp.post(
       if (!req.file) {
         throw new Error("No file uploaded");
       }
-
+      if (!req.file.mimetype.includes("video")) {
+        throw new Error("Please upload a video");
+      }
+      if (!req.body.userId) {
+        throw new Error("Please pass a user ID?");
+      }
       if (!process.env.SLACK_BOT_TOKEN) {
         throw new Error("SLACK_BOT_TOKEN is not configured");
       }
