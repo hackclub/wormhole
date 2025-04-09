@@ -8,7 +8,7 @@ import fs from "fs";
 import pkg from "@slack/bolt";
 const { App } = pkg;
 import { createReadStream } from "fs";
-
+import session from "express-session";
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -47,7 +47,7 @@ expressApp.use(
 );
 
 expressApp.use(express.json());
-
+expressApp.use(session({ secret: process.env.SESSION_SECRET || "secret"+Math.random().toFixed(20).toString().split('.')[1], resave: false, saveUninitialized: false }));
 // Initialize Slack Bolt app
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
@@ -110,7 +110,13 @@ expressApp.post("/api/slack/auth", async (req, res) => {
         details: userResponse.error,
       });
     }
-
+    req.session.loggedIn = true;
+    req.session.userData = {
+      name: userResponse.user.real_name,
+      email: userResponse.user.profile.email,
+      image_72: userResponse.user.profile.image_72,
+      id: response.authed_user.id,
+    };
     res.json({
       name: userResponse.user.real_name,
       email: userResponse.user.profile.email,
@@ -125,7 +131,6 @@ expressApp.post("/api/slack/auth", async (req, res) => {
     });
   }
 });
-
 // Publish to Slack endpoint
 expressApp.post(
   "/api/publish",
@@ -150,7 +155,12 @@ expressApp.post(
       if (!req.file) {
         throw new Error("No file uploaded");
       }
-
+      if (!req.file.mimetype.includes("video")) {
+        throw new Error("Please upload a video");
+      }
+      if (!req.session.loggedIn) {
+        throw new Error("Please log in");
+      }
       if (!process.env.SLACK_BOT_TOKEN) {
         throw new Error("SLACK_BOT_TOKEN is not configured");
       }
@@ -168,7 +178,7 @@ expressApp.post(
         file: fileStream,
         filename: req.file.originalname,
         title: req.body.title || "New Timelapse",
-        initial_comment: `Thank you for your offering, <@${req.body.userId}>`,
+        initial_comment: `Thank you for your offering, <@${req.session.userData.id ||  req.body.userId}>`,
       });
 
       console.log("Upload result:", JSON.stringify(uploadResult, null, 2));
