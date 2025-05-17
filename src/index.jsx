@@ -4,6 +4,8 @@ import "./app.css";
 import RecordingInterface from "./components/RecordingInterface";
 import LoginScreen from "./components/LoginScreen";
 
+import bestMime from "./utils/mime";
+
 function App() {
   const [interval, setInterval] = useState(1); // Default interval of 1 second
   const [isRecording, setIsRecording] = useState(false);
@@ -299,7 +301,7 @@ function App() {
       // Create a MediaRecorder
       const stream = canvas.captureStream(30); // 30 FPS
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: "video/webm;codecs=vp9",
+        mimeType: bestMime(),
       });
 
       const chunks = [];
